@@ -1,0 +1,52 @@
+{
+  "scene": {
+    "description": "Professional headshot with Rembrandt lighting, 85mm portrait lens, shallow depth of field",
+    "seed": 54321
+  },
+  "camera": {
+    "lens": {
+      "focal_length_mm": 85,
+      "aperture": 1.8
+    },
+    "position": {
+      "x": 0.0,
+      "y": 1.6,
+      "z": 2.2
+    },
+    "rotation": {
+      "pitch": 0,
+      "yaw": 0,
+      "roll": 0
+    },
+    "fov_degrees": 28
+  },
+  "lighting": {
+    "key": {
+      "type": "softbox",
+      "intensity": 1.2,
+      "direction": {
+        "x": -0.7,
+        "y": 0.5,
+        "z": -0.5
+      },
+      "color": "#ffe5cc"
+    },
+    "rim": {
+      "type": "spot",
+      "intensity": 0.4,
+      "color": "#ffffff"
+    },
+    "ambient": {
+      "intensity": 0.15
+    }
+  },
+  "post_process": {
+    "export": {
+      "format": "tiff"
+    },
+    "tone_mapping": {
+      "enabled": true,
+      "exposure": -0.2
+    }
+  }
+}

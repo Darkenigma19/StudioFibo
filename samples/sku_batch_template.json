@@ -1,0 +1,61 @@
+{
+  "batch_config": {
+    "template_name": "product_catalog_template",
+    "csv_source": "sku_list.csv",
+    "output_format": "jpg",
+    "output_resolution": "2048x2048"
+  },
+  "scene_template": {
+    "description": "Clean product photography on white background, {product_name}",
+    "seed": null
+  },
+  "camera": {
+    "lens": {
+      "focal_length_mm": 50,
+      "aperture": 5.6
+    },
+    "position": {
+      "x": 0.0,
+      "y": 0.6,
+      "z": 1.5
+    },
+    "rotation": {
+      "pitch": -8,
+      "yaw": 0,
+      "roll": 0
+    },
+    "fov_degrees": 45
+  },
+  "lighting": {
+    "key": {
+      "type": "softbox",
+      "intensity": 1.0,
+      "direction": {
+        "x": -0.5,
+        "y": 0.8,
+        "z": -0.6
+      },
+      "color": "#ffffff"
+    },
+    "rim": {
+      "type": "spot",
+      "intensity": 0.5,
+      "color": "#ffffff"
+    },
+    "ambient": {
+      "intensity": 0.7
+    }
+  },
+  "post_process": {
+    "export": {
+      "format": "{output_format}",
+      "quality": 95
+    }
+  },
+  "variable_mappings": {
+    "product_name": "csv:product_name",
+    "seed": "csv:seed",
+    "output_format": "config:output_format"
+  },
+  "notes": "This template uses variables from sku_list.csv. Each row generates one render."
+}

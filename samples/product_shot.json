@@ -1,0 +1,6 @@
+{
+  "scene": {"description":"manual coffee grinder on wooden table", "seed": 12345},
+  "camera": {"lens":{"focal_length_mm":35,"aperture":2.2},"rotation":{"yaw":12}},
+  "lighting": {"key":{"type":"softbox","intensity":1.2}},
+  "post_process":{"export":{"format":"jpg"}}
+}

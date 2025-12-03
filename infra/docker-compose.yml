@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: studioflow_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - STORAGE_BACKEND=s3
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+      - AWS_REGION=${AWS_REGION}
+      - DATABASE_PATH=/app/data/studioflow.db
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+    volumes:
+      - ./backend:/app/backend
+      - ./schemas:/app/schemas
+      - ./data:/app/data
+      - uploads:/app/uploads
+    command: uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend/StudioFlow
+      dockerfile: Dockerfile
+    container_name: studioflow_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend/StudioFlow:/app
+      - /app/node_modules
+    command: npm run dev -- --host
+    depends_on:
+      - backend
+
+volumes:
+  uploads:

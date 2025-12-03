@@ -1,0 +1,88 @@
+name: Smoke Render Test
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  smoke-render:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Start backend server
+        run: |
+          cd backend
+          uvicorn app:app --host 0.0.0.0 --port 8000 &
+          sleep 10
+        env:
+          STORAGE_BACKEND: local
+          HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+
+      - name: Test translation endpoint
+        run: |
+          curl -X POST http://localhost:8000/translate \
+            -H "Content-Type: application/json" \
+            -d '{"prompt": "Product shot of coffee mug"}' \
+            -o /tmp/translation.json
+
+          cat /tmp/translation.json
+
+      - name: Test validation endpoint
+        run: |
+          curl -X POST http://localhost:8000/validate \
+            -H "Content-Type: application/json" \
+            -d @/tmp/translation.json \
+            -o /tmp/validation.json
+
+          cat /tmp/validation.json
+
+      - name: Test low-res render
+        run: |
+          # Use low resolution and steps to speed up test
+          curl -X POST http://localhost:8000/render \
+            -H "Content-Type: application/json" \
+            -d '{
+              "scene": {"description": "Simple product test", "seed": 42},
+              "camera": {"lens": {"focal_length_mm": 50}},
+              "lighting": {"key": {"type": "softbox"}},
+              "post_process": {"export": {"format": "jpg", "width": 256, "height": 256}},
+              "render_settings": {"num_inference_steps": 10}
+            }' \
+            -o /tmp/render_result.json
+
+          cat /tmp/render_result.json
+
+      - name: Verify render output
+        run: |
+          # Check that render_result.json contains image_url field
+          if grep -q "image_url" /tmp/render_result.json; then
+            echo "✅ Render successful"
+            exit 0
+          else
+            echo "❌ Render failed - no image_url in response"
+            exit 1
+          fi
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: smoke-test-results
+          path: |
+            /tmp/translation.json
+            /tmp/validation.json
+            /tmp/render_result.json

@@ -1,0 +1,21 @@
+sku,product_name,seed,category,notes
+SKU-001,Wireless Headphones Black,12345,electronics,Premium over-ear design
+SKU-002,Wireless Headphones White,12346,electronics,Premium over-ear design
+SKU-003,Coffee Grinder Stainless,42001,kitchen,Burr grinder
+SKU-004,Coffee Grinder Matte Black,42002,kitchen,Burr grinder
+SKU-005,Desk Lamp Brass,98765,lighting,Adjustable arm
+SKU-006,Desk Lamp Black,98766,lighting,Adjustable arm
+SKU-007,Ceramic Vase Tall,55501,home_decor,Modern minimalist
+SKU-008,Ceramic Vase Short,55502,home_decor,Modern minimalist
+SKU-009,Leather Wallet Brown,77123,accessories,Italian leather
+SKU-010,Leather Wallet Black,77124,accessories,Italian leather
+SKU-011,Sunglasses Aviator,33345,accessories,Polarized lenses
+SKU-012,Sunglasses Wayfarer,33346,accessories,Polarized lenses
+SKU-013,Backpack Canvas Gray,66789,bags,Laptop compartment
+SKU-014,Backpack Canvas Navy,66790,bags,Laptop compartment
+SKU-015,Sneakers White Leather,88901,footwear,Low-top design
+SKU-016,Sneakers Black Canvas,88902,footwear,Low-top design
+SKU-017,Water Bottle Steel,44567,sports,Insulated 32oz
+SKU-018,Water Bottle Copper,44568,sports,Insulated 32oz
+SKU-019,Watch Chronograph Silver,11223,jewelry,Automatic movement
+SKU-020,Watch Chronograph Gold,11224,jewelry,Automatic movement

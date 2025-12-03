@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest black flake8 mypy
+
+      - name: Lint backend with black
+        run: |
+          cd backend
+          black --check .
+
+      - name: Lint backend with flake8
+        run: |
+          cd backend
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Type check with mypy
+        run: |
+          cd backend
+          mypy . --ignore-missing-imports
+        continue-on-error: true
+
+      - name: Run backend unit tests
+        run: |
+          pytest tests/ -v --tb=short
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend/StudioFlow
+          npm ci --legacy-peer-deps
+
+      - name: Lint frontend with ESLint
+        run: |
+          cd frontend/StudioFlow
+          npm run lint
+        continue-on-error: true
+
+      - name: Type check frontend
+        run: |
+          cd frontend/StudioFlow
+          npx tsc --noEmit
+
+      - name: Build frontend
+        run: |
+          cd frontend/StudioFlow
+          npm run build

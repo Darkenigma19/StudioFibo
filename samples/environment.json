@@ -1,0 +1,60 @@
+{
+  "scene": {
+    "description": "Modern minimalist interior environment, natural window light, Scandinavian design aesthetic",
+    "seed": 77889
+  },
+  "camera": {
+    "lens": {
+      "focal_length_mm": 24,
+      "aperture": 8.0
+    },
+    "position": {
+      "x": -1.5,
+      "y": 1.2,
+      "z": 3.0
+    },
+    "rotation": {
+      "pitch": -5,
+      "yaw": 15,
+      "roll": 0
+    },
+    "fov_degrees": 75
+  },
+  "lighting": {
+    "key": {
+      "type": "directional",
+      "intensity": 0.8,
+      "direction": {
+        "x": 0.3,
+        "y": -0.6,
+        "z": -0.7
+      },
+      "color": "#fff8e7"
+    },
+    "ambient": {
+      "intensity": 0.6
+    }
+  },
+  "materials": {
+    "floor": {
+      "color_palette": "light_oak",
+      "roughness": 0.4,
+      "metalness": 0.0
+    },
+    "walls": {
+      "color_palette": "warm_white",
+      "roughness": 0.9,
+      "metalness": 0.0
+    }
+  },
+  "post_process": {
+    "export": {
+      "format": "jpg",
+      "quality": 92
+    },
+    "tone_mapping": {
+      "enabled": true,
+      "exposure": 0.3
+    }
+  }
+}

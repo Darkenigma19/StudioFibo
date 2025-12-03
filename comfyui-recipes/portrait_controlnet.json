@@ -1,0 +1,127 @@
+{
+  "name": "portrait_controlnet",
+  "description": "Portrait rendering with depth-based ControlNet for realistic facial features",
+  "comfyui_version": "0.1.0",
+  "nodes": {
+    "checkpoint_loader": {
+      "id": 1,
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "bria_fibo_v2.3.safetensors"
+      }
+    },
+    "controlnet_loader": {
+      "id": 2,
+      "class_type": "ControlNetLoader",
+      "inputs": {
+        "control_net_name": "control_v11f1p_sd15_depth.pth"
+      }
+    },
+    "load_depth_map": {
+      "id": 3,
+      "class_type": "LoadImage",
+      "inputs": {
+        "image": "{controlnet.image_ref}"
+      }
+    },
+    "controlnet_apply": {
+      "id": 4,
+      "class_type": "ControlNetApply",
+      "inputs": {
+        "conditioning": ["7", 0],
+        "control_net": ["2", 0],
+        "image": ["3", 0],
+        "strength": "{controlnet.strength}"
+      }
+    },
+    "clip_text_encode_positive": {
+      "id": 7,
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "{scene.description}, professional photography, 85mm lens, studio lighting",
+        "clip": ["1", 1]
+      }
+    },
+    "clip_text_encode_negative": {
+      "id": 8,
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "blurry, distorted face, bad anatomy, low quality, watermark, multiple people",
+        "clip": ["1", 1]
+      }
+    },
+    "empty_latent": {
+      "id": 9,
+      "class_type": "EmptyLatentImage",
+      "inputs": {
+        "width": 768,
+        "height": 1024,
+        "batch_size": 1
+      }
+    },
+    "ksampler": {
+      "id": 10,
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": "{scene.seed}",
+        "steps": 35,
+        "cfg": 7.5,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 1.0,
+        "model": ["1", 0],
+        "positive": ["4", 0],
+        "negative": ["8", 0],
+        "latent_image": ["9", 0]
+      }
+    },
+    "vae_decode": {
+      "id": 11,
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": ["10", 0],
+        "vae": ["1", 2]
+      }
+    },
+    "color_correct": {
+      "id": 13,
+      "class_type": "ColorCorrect",
+      "inputs": {
+        "image": ["11", 0],
+        "temperature": 0.0,
+        "hue": 0.0,
+        "brightness": "{lighting.key.intensity - 1.0}",
+        "contrast": 1.1,
+        "saturation": 1.05
+      }
+    },
+    "save_image": {
+      "id": 12,
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": ["13", 0],
+        "filename_prefix": "studioflow_portrait"
+      }
+    }
+  },
+  "field_mappings": {
+    "scene.description": "nodes.clip_text_encode_positive.inputs.text",
+    "scene.seed": "nodes.ksampler.inputs.seed",
+    "controlnet.image_ref": "nodes.load_depth_map.inputs.image",
+    "controlnet.strength": "nodes.controlnet_apply.inputs.strength",
+    "lighting.key.intensity": "nodes.color_correct.inputs.brightness"
+  },
+  "notes": [
+    "Portrait aspect ratio: 768x1024 (3:4)",
+    "Depth ControlNet preserves facial structure and pose",
+    "Color correction node adjusts for lighting intensity",
+    "Higher steps (35) for better facial detail",
+    "Use DPM++ 2M Karras sampler for smoother skin"
+  ],
+  "recommended_settings": {
+    "controlnet.strength": 0.65,
+    "lighting.key.intensity": 1.2,
+    "camera.lens.focal_length_mm": 85,
+    "camera.lens.aperture": 1.8
+  }
+}
