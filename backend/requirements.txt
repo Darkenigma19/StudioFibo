@@ -8,3 +8,7 @@ python-dotenv
 jsonschema
 pillow
 python-multipart
+torch
+diffusers
+transformers
+accelerate

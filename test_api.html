@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>StudioFlow API Test</title>
+</head>
+<body>
+    <h1>StudioFlow Backend Test</h1>
+    
+    <h2>Test 1: Translate</h2>
+    <button onclick="testTranslate()">Test Translate</button>
+    <pre id="translate-result"></pre>
+    
+    <h2>Test 2: Render</h2>
+    <button onclick="testRender()">Test Render</button>
+    <pre id="render-result"></pre>
+    
+    <h2>Test 3: Get Versions</h2>
+    <button onclick="testVersions()">Test Get Versions</button>
+    <pre id="versions-result"></pre>
+    
+    <h2>Test 4: Display Latest Image</h2>
+    <div id="image-container"></div>
+    
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000';
+        
+        async function testTranslate() {
+            const result = document.getElementById('translate-result');
+            try {
+                const response = await fetch(`${API_BASE}/translate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: 'A beautiful sunset' })
+                });
+                const data = await response.json();
+                result.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        async function testRender() {
+            const result = document.getElementById('render-result');
+            try {
+                // First translate
+                const translateResp = await fetch(`${API_BASE}/translate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: 'A beautiful sunset over mountains' })
+                });
+                const fiboJson = await translateResp.json();
+                
+                // Then render
+                const renderResp = await fetch(`${API_BASE}/render`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fiboJson)
+                });
+                const renderData = await renderResp.json();
+                result.textContent = JSON.stringify(renderData, null, 2);
+                
+                // Show image
+                const imgContainer = document.getElementById('image-container');
+                imgContainer.innerHTML = `<img src="${API_BASE}${renderData.image_url}" style="max-width: 500px;" />`;
+            } catch (error) {
+                result.textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        async function testVersions() {
+            const result = document.getElementById('versions-result');
+            try {
+                const response = await fetch(`${API_BASE}/versions`);
+                const data = await response.json();
+                result.textContent = JSON.stringify(data, null, 2);
+                
+                // Display latest image
+                if (data.length > 0) {
+                    const imgContainer = document.getElementById('image-container');
+                    imgContainer.innerHTML = `<h3>Latest Render:</h3><img src="${API_BASE}${data[0].image_url}" style="max-width: 500px; border: 2px solid #333;" />`;
+                }
+            } catch (error) {
+                result.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

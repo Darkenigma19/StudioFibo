@@ -18,6 +18,16 @@ export function PreviewPanel({
   versions,
   onVersionSelect,
 }: PreviewPanelProps) {
+  // Get the latest rendered image
+  const latestImage = versions.length > 0 ? versions[0].thumbnail : null;
+
+  // Debug logging
+  console.log("PreviewPanel - versions count:", versions.length);
+  console.log("PreviewPanel - latestImage:", latestImage);
+  if (versions.length > 0) {
+    console.log("PreviewPanel - latest version:", versions[0]);
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-background">
       <VersionHistoryBar
@@ -26,7 +36,11 @@ export function PreviewPanel({
       />
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <RenderPreview params={params} isRendering={isRendering} />
+        <RenderPreview
+          params={params}
+          isRendering={isRendering}
+          latestImage={latestImage}
+        />
       </div>
 
       {/* Export Tools */}

@@ -6,15 +6,30 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Eye, Loader2, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/lib/api";
 
 interface RenderPreviewProps {
   params: RenderParameters;
   isRendering: boolean;
+  latestImage: string | null;
 }
 
-export function RenderPreview({ params, isRendering }: RenderPreviewProps) {
+export function RenderPreview({
+  params,
+  isRendering,
+  latestImage,
+}: RenderPreviewProps) {
   const [comparePosition, setComparePosition] = useState(50);
   const [zoom, setZoom] = useState(100);
+
+  // Use placeholder images if no renders yet
+  const beforeImage = "/mountain-landscape-original-unprocessed.jpg";
+  const afterImage =
+    latestImage || "/mountain-landscape-golden-hour-cinematic-rendered.jpg";
+
+  // Debug logging
+  console.log("RenderPreview - latestImage:", latestImage);
+  console.log("RenderPreview - afterImage will use:", afterImage);
 
   return (
     <div className="flex flex-col h-full">
@@ -70,7 +85,7 @@ export function RenderPreview({ params, isRendering }: RenderPreviewProps) {
           <div className="absolute inset-0">
             {/* Before Image */}
             <img
-              src="/mountain-landscape-original-unprocessed.jpg"
+              src={beforeImage}
               alt="Before"
               className="absolute inset-0 w-full h-full object-cover"
             />
@@ -81,9 +96,14 @@ export function RenderPreview({ params, isRendering }: RenderPreviewProps) {
               style={{ clipPath: `inset(0 ${100 - comparePosition}% 0 0)` }}
             >
               <img
-                src="/mountain-landscape-golden-hour-cinematic-rendered.jpg"
+                src={afterImage}
                 alt="After"
                 className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => {
+                  console.error("Failed to load image:", afterImage);
+                  e.currentTarget.src =
+                    "/mountain-landscape-golden-hour-cinematic-rendered.jpg";
+                }}
               />
             </div>
 

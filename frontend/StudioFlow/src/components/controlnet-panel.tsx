@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { uploadControlNet } from "@/lib/api";
 
 interface ControlNetConfig {
   type: "sketch" | "depth" | "canny" | "none"
@@ -26,7 +27,29 @@ const controlNetTypes = [
   { value: "depth", label: "Depth Map" },
   { value: "canny", label: "Canny Edge" },
 ]
+const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) =>{
+  const file = e.target.files?.[0];
+  if(!file) return;
 
+  try{
+    const result = await uploadControlNet(file , controlNetTypes.type);
+
+    onControlNetChange({
+      ...controlNet,
+      image: result.path || result.filename,
+    });
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (e) =>{
+      setPreviewUrl(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  } catch(error){
+    console.error('Upload failed : ',error);
+    alert('Failed to upload image.Make sure is running')
+  }
+};
 export function ControlNetPanel({ controlNet, onControlNetChange }: ControlNetPanelProps) {
   const [isDragging, setIsDragging] = useState(false)
 

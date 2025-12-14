@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend Debug Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        h2 { color: #4ade80; }
+        .test { margin: 20px 0; padding: 15px; background: #2a2a2a; border-left: 4px solid #4ade80; }
+        .result { margin: 10px 0; padding: 10px; background: #1a1a1a; }
+        .success { color: #4ade80; }
+        .error { color: #ef4444; }
+        img { max-width: 400px; border: 2px solid #4ade80; margin: 10px 0; }
+        button { background: #4ade80; color: #000; padding: 10px 20px; border: none; cursor: pointer; margin: 5px; }
+        button:hover { background: #22c55e; }
+    </style>
+</head>
+<body>
+    <h1>🔍 StudioFlow Frontend Debug</h1>
+    
+    <div class="test">
+        <h2>Test 1: Check if Frontend Can Reach Backend</h2>
+        <button onclick="testBackend()">Test Backend Connection</button>
+        <div id="backend-result" class="result"></div>
+    </div>
+    
+    <div class="test">
+        <h2>Test 2: Fetch Versions from API</h2>
+        <button onclick="testVersions()">Get Versions</button>
+        <div id="versions-result" class="result"></div>
+    </div>
+    
+    <div class="test">
+        <h2>Test 3: Render New Image</h2>
+        <button onclick="testRender()">Render New Image</button>
+        <div id="render-result" class="result"></div>
+    </div>
+    
+    <div class="test">
+        <h2>Test 4: Display Latest Image</h2>
+        <button onclick="displayImage()">Show Latest Render</button>
+        <div id="image-result" class="result"></div>
+    </div>
+    
+    <script>
+        const BACKEND = 'http://127.0.0.1:8000';
+        
+        async function testBackend() {
+            const result = document.getElementById('backend-result');
+            result.innerHTML = 'Testing...';
+            
+            try {
+                const resp = await fetch(`${BACKEND}/versions`);
+                if (resp.ok) {
+                    result.innerHTML = '<span class="success">✓ Backend is reachable!</span>';
+                } else {
+                    result.innerHTML = `<span class="error">✗ Backend returned: ${resp.status}</span>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<span class="error">✗ Cannot reach backend: ${e.message}</span>`;
+            }
+        }
+        
+        async function testVersions() {
+            const result = document.getElementById('versions-result');
+            result.innerHTML = 'Fetching versions...';
+            
+            try {
+                const resp = await fetch(`${BACKEND}/versions`);
+                const data = await resp.json();
+                
+                result.innerHTML = `
+                    <span class="success">✓ Found ${data.length} versions</span><br>
+                    <pre>${JSON.stringify(data.slice(0, 3), null, 2)}</pre>
+                `;
+            } catch (e) {
+                result.innerHTML = `<span class="error">✗ Error: ${e.message}</span>`;
+            }
+        }
+        
+        async function testRender() {
+            const result = document.getElementById('render-result');
+            result.innerHTML = 'Rendering... (this may take 30-60 seconds for REAL FIBO)';
+            
+            try {
+                // Translate
+                const translateResp = await fetch(`${BACKEND}/translate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: 'A beautiful mountain sunset with dramatic clouds' })
+                });
+                const fiboJson = await translateResp.json();
+                
+                // Render
+                const renderResp = await fetch(`${BACKEND}/render`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fiboJson)
+                });
+                const renderData = await renderResp.json();
+                
+                result.innerHTML = `
+                    <span class="success">✓ Render complete!</span><br>
+                    Version ID: ${renderData.version_id}<br>
+                    Image URL: ${renderData.image_url}<br>
+                    Seed: ${renderData.seed}<br>
+                    <img src="${BACKEND}${renderData.image_url}" />
+                `;
+            } catch (e) {
+                result.innerHTML = `<span class="error">✗ Error: ${e.message}</span>`;
+            }
+        }
+        
+        async function displayImage() {
+            const result = document.getElementById('image-result');
+            result.innerHTML = 'Loading...';
+            
+            try {
+                const resp = await fetch(`${BACKEND}/versions`);
+                const data = await resp.json();
+                
+                if (data.length === 0) {
+                    result.innerHTML = '<span class="error">✗ No versions found</span>';
+                    return;
+                }
+                
+                const latest = data[0];
+                result.innerHTML = `
+                    <span class="success">✓ Latest render:</span><br>
+                    ID: ${latest.id}<br>
+                    Timestamp: ${latest.timestamp}<br>
+                    Image URL: ${latest.image_url}<br>
+                    <img src="${BACKEND}${latest.image_url}" 
+                         onerror="this.style.border='2px solid red'; this.alt='Failed to load: ${BACKEND}${latest.image_url}'" />
+                `;
+            } catch (e) {
+                result.innerHTML = `<span class="error">✗ Error: ${e.message}</span>`;
+            }
+        }
+        
+        // Auto-test on load
+        window.onload = () => {
+            testBackend();
+            setTimeout(testVersions, 500);
+            setTimeout(displayImage, 1000);
+        };
+    </script>
+</body>
+</html>

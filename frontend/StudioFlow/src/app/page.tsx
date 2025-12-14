@@ -1,9 +1,16 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ControlPanel } from "@/components/control-panel";
 import { PreviewPanel } from "@/components/preview-panel";
 import { Header } from "@/components/header";
+import {
+  translatePrompt,
+  validateParams,
+  renderImage,
+  getVersions,
+  API_BASE_URL,
+} from "@/lib/api";
 
 export interface RenderParameters {
   prompt: string;
@@ -74,6 +81,28 @@ export default function StudioFlow() {
   const [isRendering, setIsRendering] = useState(false);
   const [isValidated, setIsValidated] = useState(false);
 
+  // Load versions from backend on mount
+  useEffect(() => {
+    const loadVersions = async () => {
+      try {
+        const data = await getVersions();
+        if (data && data.length > 0) {
+          const mappedVersions: Version[] = data.map((v: any) => ({
+            id: v.id,
+            timestamp: new Date(v.timestamp),
+            thumbnail: `${API_BASE_URL}${v.image_url}`,
+            params: initialParams, // Use initial params as we don't store full params in DB
+          }));
+          setVersions(mappedVersions);
+          console.log("Loaded versions from backend:", mappedVersions.length);
+        }
+      } catch (error) {
+        console.error("Failed to load versions:", error);
+      }
+    };
+    loadVersions();
+  }, []);
+
   const handleParamChange = useCallback(
     (key: keyof RenderParameters, value: unknown) => {
       setParams((prev) => ({ ...prev, [key]: value }));
@@ -87,32 +116,75 @@ export default function StudioFlow() {
     setIsValidated(false);
   }, []);
 
-  const handleTranslate = useCallback(() => {
-    // Simulate prompt translation/enhancement
-    setParams((prev) => ({
-      ...prev,
-      prompt:
-        prev.prompt + " — enhanced with professional cinematography techniques",
-    }));
-  }, []);
+  const handleTranslate = useCallback(async () => {
+    try {
+      const result = await translatePrompt(params.prompt);
+      setParams((prev) => ({
+        ...prev,
+        prompt: result.translated_prompt || result.prompt || prev.prompt,
+      }));
+    } catch (error) {
+      console.error("Translation failed:", error);
+      alert("Failed to translate prompt. Please try again.");
+    }
+  }, [params.prompt]);
 
-  const handleValidate = useCallback(() => {
-    setIsValidated(true);
-  }, []);
+  const handleValidate = useCallback(async () => {
+    // Simple validation example
+    try {
+      const result = await validateParams(params);
+      if (result.valid) {
+        setIsValidated(true);
+        alert("Parameters are valid!");
+      } else {
+        setIsValidated(false);
+        alert("Validation failed: " + (result.message || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Validation failed:", error);
+      alert("Failed to validate parameters. Please try again.");
+    }
+  }, [params]);
 
-  const handleRender = useCallback(() => {
+  const handleRender = useCallback(async () => {
+    console.log("🎨 Starting render process...");
+    console.log("Prompt:", params.prompt);
     setIsRendering(true);
-    // Simulate render
-    setTimeout(() => {
+
+    try {
+      // First translate prompt to FIBO JSON
+      console.log("Step 1: Translating prompt...");
+      const translatedJson = await translatePrompt(params.prompt);
+      console.log("Translation result:", translatedJson);
+
+      // Then render with the translated JSON
+      console.log("Step 2: Rendering image...");
+      const result = await renderImage(translatedJson);
+      console.log("Render result:", result);
+
+      const imageUrl = `${API_BASE_URL}${result.image_url}`;
+      console.log("Full image URL:", imageUrl);
+
       const newVersion: Version = {
         id: `v${versions.length + 1}`,
         timestamp: new Date(),
-        thumbnail: `/placeholder.svg?height=80&width=120&query=rendered scene ${params.seed}`,
+        thumbnail: imageUrl,
         params: { ...params },
       };
+
+      console.log("New version:", newVersion);
       setVersions((prev) => [newVersion, ...prev]);
+      console.log("✓ Render complete! Image should appear in preview.");
+    } catch (error) {
+      console.error("❌ Rendering failed:", error);
+      alert(
+        `Failed to render image: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    } finally {
       setIsRendering(false);
-    }, 2000);
+    }
   }, [params, versions.length]);
 
   const handleVersionSelect = useCallback((version: Version) => {

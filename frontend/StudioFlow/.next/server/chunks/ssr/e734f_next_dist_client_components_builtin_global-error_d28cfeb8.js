@@ -1,0 +1,3 @@
+module.exports=[78746,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(24282);a.n(d("[project]/StudioFlow/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},35405,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(24282);a.n(d("[project]/StudioFlow/node_modules/next/dist/client/components/builtin/global-error.js"))},92318,a=>{"use strict";a.i(78746);var b=a.i(35405);a.n(b)}];
+
+//# sourceMappingURL=e734f_next_dist_client_components_builtin_global-error_d28cfeb8.js.map

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import type { Version } from "@/page";
 import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,12 @@ export function VersionHistoryBar({
   onVersionSelect,
 }: VersionHistoryBarProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Fix hydration error by only rendering timestamps on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -80,14 +86,9 @@ export function VersionHistoryBar({
                   <span className="text-xs font-medium">
                     v{version.id.replace("v", "")}
                   </span>
-                  {index === 0 && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent font-medium">
-                      Latest
-                    </span>
-                  )}
                 </div>
                 <span className="text-[10px] text-muted-foreground">
-                  {formatTimeAgo(version.timestamp)}
+                  {mounted ? formatTimeAgo(version.timestamp) : "..."}
                 </span>
               </div>
             </button>

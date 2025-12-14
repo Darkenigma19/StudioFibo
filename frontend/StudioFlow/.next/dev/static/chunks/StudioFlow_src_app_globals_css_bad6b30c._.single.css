@@ -960,16 +960,6 @@
     }
   }
 
-  .bg-accent\/15 {
-    background-color: var(--accent);
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .bg-accent\/15 {
-      background-color: color-mix(in oklab, var(--accent) 15%, transparent);
-    }
-  }
-
   .bg-background {
     background-color: var(--background);
   }
@@ -1411,6 +1401,10 @@
   .select-none {
     -webkit-user-select: none;
     user-select: none;
+  }
+
+  .running {
+    animation-play-state: running;
   }
 
   @media (hover: hover) {

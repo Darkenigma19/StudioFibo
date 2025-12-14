@@ -11,6 +11,13 @@ from pydantic import BaseModel
 from jsonschema import validate, ValidationError
 from fastapi import UploadFile, File, Form
 from backend.orchestrator.controlnet_adapter import save_upload
+from backend.model_clients.fibo_client import FIBOClient
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SCHEMA_PATH = os.path.join(os.path.dirname(BASE_DIR), "schemas", "fibo_schema.json")
@@ -47,7 +54,7 @@ app = FastAPI(title = "StudioFlow - Phase 2 Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -111,18 +118,43 @@ async def validate_json(payload: dict):
 
 def render_with_fibo(scene_json):
     """
-    MVP stub for rendering:
-    - Copies samples/example_render.jpg -> samples/outputs/render_<uuid>.jpg
-    - In future, replace with actual HF/Bria pipeline call.
+    Real FIBO rendering using HuggingFace Diffusers.
+    Falls back to mock rendering if FIBO client fails to load.
     """
-    src = os.path.join(SAMPLES_DIR, "example_render.jpg")
-    if not os.path.exists(src):
-        raise FileNotFoundError("Sample render image not found.")
-    out_name = f"render_{uuid.uuid4().hex[:12]}.jpg"
-    out_path = os.path.join(OUTPUT_DIR, out_name)
-    shutil.copyfile(src, out_path)
-    # In a real implementation, this would be a URL to a hosted location
-    return out_path
+    try:
+        # Initialize FIBO client
+        client = FIBOClient()
+        
+        # Extract parameters from scene_json
+        prompt = scene_json.get("scene", {}).get("description", "")
+        seed = scene_json.get("scene", {}).get("seed", None)
+        
+        # Prepare rendering arguments
+        render_args = {
+            "prompt": prompt,
+            "seed": seed,
+            "num_inference_steps": 30,
+            "guidance_scale": 7.5,
+            "width": 1024,
+            "height": 1024
+        }
+        
+        # Generate image with FIBO
+        out_path = client.generate(render_args)
+        return out_path
+        
+    except Exception as e:
+        print(f"Warning: FIBO rendering failed: {e}")
+        print("Falling back to mock rendering...")
+        
+        # Fallback to mock rendering
+        src = os.path.join(SAMPLES_DIR, "example_render.jpg")
+        if not os.path.exists(src):
+            raise FileNotFoundError("Sample render image not found.")
+        out_name = f"render_{uuid.uuid4().hex[:12]}.jpg"
+        out_path = os.path.join(OUTPUT_DIR, out_name)
+        shutil.copyfile(src, out_path)
+        return out_path
 
 def render_with_controlnet(scene_json):
     """
@@ -188,7 +220,7 @@ async def render(scene_json: dict):
 async def list_versions():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id, seed, timestamp, image_url FROM versions ORDER BY timestamp DESC")
+    c.execute("SELECT id, seed, timestamp, image_url, json FROM versions ORDER BY timestamp DESC")
     rows = c.fetchall()
     conn.close()
     results = []
@@ -197,8 +229,7 @@ async def list_versions():
             "id": r[0],
             "seed": r[1],
             "timestamp": r[2],
-            "image_url": r[3],
-            "json_preview": json.loads(r[4]) if r[4] else {}
+            "image_url": r[3]
         })
     return results
 
