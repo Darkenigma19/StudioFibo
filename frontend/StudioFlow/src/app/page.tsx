@@ -130,15 +130,22 @@ export default function StudioFlow() {
   }, [params.prompt]);
 
   const handleValidate = useCallback(async () => {
-    // Simple validation example
+    // Validate parameters and get enhanced prompt
     try {
       const result = await validateParams(params);
       if (result.valid) {
         setIsValidated(true);
-        alert("Parameters are valid!");
+
+        // Show enhanced prompt to user
+        const message = result.enhancedPrompt
+          ? `✓ Parameters are valid!\n\nEnhanced Prompt for Image Generation:\n${result.enhancedPrompt}`
+          : "✓ Parameters are valid!";
+
+        alert(message);
+        console.log("Enhanced prompt:", result.enhancedPrompt);
       } else {
         setIsValidated(false);
-        alert("Validation failed: " + (result.message || "Unknown error"));
+        alert("Validation failed: " + (result.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Validation failed:", error);
@@ -147,7 +154,7 @@ export default function StudioFlow() {
   }, [params]);
 
   const handleRender = useCallback(async () => {
-    console.log("🎨 Starting render process...");
+    console.log("Starting render process...");
     console.log("Prompt:", params.prompt);
     setIsRendering(true);
 
@@ -176,7 +183,7 @@ export default function StudioFlow() {
       setVersions((prev) => [newVersion, ...prev]);
       console.log("✓ Render complete! Image should appear in preview.");
     } catch (error) {
-      console.error("❌ Rendering failed:", error);
+      console.error("Rendering failed:", error);
       alert(
         `Failed to render image: ${
           error instanceof Error ? error.message : "Unknown error"

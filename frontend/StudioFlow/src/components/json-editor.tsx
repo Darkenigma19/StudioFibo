@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { RenderParameters } from "@/page";
+import type { RenderParameters } from "@/app/page";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, ChevronRight, ChevronDown, Code2 } from "lucide-react";
 

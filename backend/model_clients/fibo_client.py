@@ -1,7 +1,7 @@
 """
 FIBO Client - HuggingFace Diffusers Wrapper
 
-Handles direct inference with Bria AI's FIBO model.
+Handles direct inference with Stable Diffusion XL model for image generation.
 """
 
 import os
@@ -11,10 +11,11 @@ from pathlib import Path
 
 
 class FIBOClient:
-    """Client for FIBO model inference via HuggingFace Diffusers."""
+    """Client for Stable Diffusion XL model inference via HuggingFace Diffusers."""
     
     def __init__(self):
-        self.model_id = os.getenv("FIBO_MODEL_ID", "briaai/BRIA-2.3-FAST")
+        # Use Stable Diffusion XL instead of BRIA
+        self.model_id = os.getenv("FIBO_MODEL_ID", "stabilityai/stable-diffusion-xl-base-1.0")
         self.hf_token = os.getenv("HF_API_TOKEN")
         self.pipeline = None
         self.output_dir = Path(__file__).parent.parent / "samples" / "output"
@@ -26,31 +27,36 @@ class FIBOClient:
             return
             
         try:
-            from diffusers import StableDiffusionPipeline
+            from diffusers import StableDiffusionXLPipeline
             import torch
             
-            self.pipeline = StableDiffusionPipeline.from_pretrained(
+            print(f"Loading Stable Diffusion XL model: {self.model_id}")
+            self.pipeline = StableDiffusionXLPipeline.from_pretrained(
                 self.model_id,
                 torch_dtype=torch.float16,
-                use_auth_token=self.hf_token
+                use_auth_token=self.hf_token if self.hf_token else None
             )
             
             # Enable optimizations
             if torch.cuda.is_available():
+                print("Using CUDA GPU for inference")
                 self.pipeline = self.pipeline.to("cuda")
                 self.pipeline.enable_attention_slicing()
             else:
                 # CPU fallback
+                print("Using CPU for inference (this will be slow)")
                 self.pipeline = self.pipeline.to("cpu")
                 
+            print("Model loaded successfully!")
+                
         except Exception as e:
-            print(f"Warning: Could not load FIBO pipeline: {e}")
+            print(f"Warning: Could not load Stable Diffusion XL pipeline: {e}")
             print("Falling back to mock rendering")
             self.pipeline = None
     
     def generate(self, args: Dict[str, Any]) -> str:
         """
-        Generate image using FIBO model.
+        Generate image using Stable Diffusion XL model.
         
         Args:
             args: Rendering arguments (prompt, seed, steps, etc.)
@@ -64,11 +70,13 @@ class FIBOClient:
             # Fallback: copy example image
             return self._mock_generate(args)
         
-        # Run inference
+        print(f"Generating image with prompt: {args['prompt'][:50]}...")
+        
+        # Run inference with SDXL parameters
         image = self.pipeline(
             prompt=args["prompt"],
-            num_inference_steps=args.get("num_inference_steps", 30),
-            guidance_scale=args.get("guidance_scale", 7.5),
+            num_inference_steps=args.get("num_inference_steps", 50),  # SDXL works well with 50 steps
+            guidance_scale=args.get("guidance_scale", 9.0),  # Higher guidance for better quality
             width=args.get("width", 1024),
             height=args.get("height", 1024),
             generator=self._get_generator(args.get("seed")),
@@ -79,6 +87,7 @@ class FIBOClient:
         output_path = self.output_dir / output_name
         image.save(output_path, "JPEG", quality=95)
         
+        print(f"Image saved to: {output_path}")
         return str(output_path)
     
     def _get_generator(self, seed: int = None):

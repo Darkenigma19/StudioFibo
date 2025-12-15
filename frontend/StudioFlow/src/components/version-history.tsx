@@ -1,6 +1,6 @@
 "use client";
 
-import type { Version } from "@/page";
+import type { Version } from "@/app/page";
 import { Label } from "@/components/ui/label";
 import { Clock, ChevronRight } from "lucide-react";
 

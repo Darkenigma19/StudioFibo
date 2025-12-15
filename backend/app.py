@@ -12,6 +12,7 @@ from jsonschema import validate, ValidationError
 from fastapi import UploadFile, File, Form
 from backend.orchestrator.controlnet_adapter import save_upload
 from backend.model_clients.fibo_client import FIBOClient
+from backend.translator.translator import translate_prompt_to_json, params_to_enhanced_prompt
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -70,81 +71,126 @@ class NLRequest(BaseModel):
 @app.post("/translate")
 async def translate(request: NLRequest):
     """
-    Simple rule-based translator for Phase 2 MVP.
-    This returns a deterministic JSON manifest from the prompt.
-    Replace with LLM translator later.
+    Translate natural language prompt to frontend-compatible JSON format.
+    Returns parameters matching the frontend RenderParameters interface.
     """
     prompt = request.prompt.strip()
-    # Very simple rule-based translation
-    focal = 35
-    if "50mm" in prompt or "50 mm" in prompt or "50mm," in prompt:
-        focal = 50
-    if "85mm" in prompt or "85 mm" in prompt or "85mm," in prompt:
-        focal = 85
-
-    # checky for "moody" -> darker ambient
-    ambient = 0.1 if "moody" in prompt.lower() else 0.2
-
-    json_out = {
-        "scene": {"description": prompt, "seed": 12345},
-        "camera": {
-            "lens": {"focal_length_mm": focal, "aperture": 2.2},
-            "position": {"x": 0.0, "y": 0.6, "z": 1.2},
-            "rotation": {"pitch": -8, "yaw": 0, "roll": 0},
-            "fov_degrees": 45
-        },
-        "lighting": {
-            "key": {"type": "softbox", "intensity": 1.0, "direction": {"x": -0.6, "y": 0.9, "z": -0.8}},
-            "rim": {"type": "spot", "intensity": 0.6, "color": "#ffd9b3"},
-            "ambient": {"intensity": ambient}
-        },
-        "controlnet": {"sketch_guidance": {"enabled": False}},
-        "post_process": {"export": {"format": "jpg"}}
-    }
-
-    try:
-        validate(instance=json_out, schema=FIBO_SCHEMA)
-    except ValidationError as e:
-        raise HTTPException(status_code=500, detail=f"Generated JSON failed schema validation: {e.message}")
-    return json_out
+    
+    # Use the translator module
+    result = translate_prompt_to_json(prompt)
+    
+    return result
 
 @app.post("/validate")
 async def validate_json(payload: dict):
+    """
+    Validate frontend RenderParameters format.
+    Checks for required fields, correct types, and value ranges matching frontend sliders/selects.
+    Returns validation status and an enhanced prompt for image generation.
+    """
     try:
-        validate(instance=payload, schema=FIBO_SCHEMA)
-        return {"valid": True}
-    except ValidationError as e:
-        return {"valid": False, "error": e.message}
+        # Required fields validation
+        required_fields = ["prompt", "focalLength", "yaw", "pitch", "lighting", 
+                          "colorPalette", "controlNet", "seed", "resolution", "colorSpace"]
+        
+        for field in required_fields:
+            if field not in payload:
+                return {"valid": False, "error": f"Missing required field: {field}"}
+        
+        # Type validations
+        if not isinstance(payload["focalLength"], (int, float)):
+            return {"valid": False, "error": "focalLength must be a number"}
+        
+        if not isinstance(payload["seed"], int):
+            return {"valid": False, "error": "seed must be an integer"}
+        
+        # Range validations (matching frontend sliders)
+        if not (12 <= payload["focalLength"] <= 200):
+            return {"valid": False, "error": "focalLength must be between 12 and 200"}
+        
+        if not (-180 <= payload["yaw"] <= 180):
+            return {"valid": False, "error": "yaw must be between -180 and 180"}
+        
+        if not (-90 <= payload["pitch"] <= 90):
+            return {"valid": False, "error": "pitch must be between -90 and 90"}
+        
+        if not (0 <= payload["lighting"] <= 100):
+            return {"valid": False, "error": "lighting must be between 0 and 100"}
+        
+        # Color palette validation (matching frontend select options)
+        valid_palettes = ["warm", "cool", "neutral", "cinematic", "vibrant"]
+        if payload["colorPalette"] not in valid_palettes:
+            return {"valid": False, "error": f"colorPalette must be one of: {', '.join(valid_palettes)}"}
+        
+        # ControlNet validation
+        if "controlNet" in payload:
+            cn = payload["controlNet"]
+            valid_types = ["none", "sketch", "depth", "canny"]
+            if cn.get("type") not in valid_types:
+                return {"valid": False, "error": f"controlNet.type must be one of: {', '.join(valid_types)}"}
+            
+            if "strength" in cn and not (0.0 <= cn["strength"] <= 1.0):
+                return {"valid": False, "error": "controlNet.strength must be between 0.0 and 1.0"}
+        
+        # Color space validation
+        valid_color_spaces = ["sRGB", "Adobe RGB", "Display P3"]
+        if payload["colorSpace"] not in valid_color_spaces:
+            return {"valid": False, "error": f"colorSpace must be one of: {', '.join(valid_color_spaces)}"}
+        
+        # Generate enhanced prompt from parameters
+        enhanced_prompt = params_to_enhanced_prompt(payload)
+        
+        return {
+            "valid": True,
+            "enhancedPrompt": enhanced_prompt,
+            "message": "Parameters are valid and ready for rendering"
+        }
+    except Exception as e:
+        return {"valid": False, "error": str(e)}
 
 def render_with_fibo(scene_json):
     """
-    Real FIBO rendering using HuggingFace Diffusers.
-    Falls back to mock rendering if FIBO client fails to load.
+    Real image generation using Stable Diffusion XL via HuggingFace Diffusers.
+    Accepts frontend RenderParameters format and converts to enhanced prompt.
+    Falls back to mock rendering if SDXL fails to load.
     """
     try:
-        # Initialize FIBO client
+        # Initialize FIBO client (now using SDXL)
         client = FIBOClient()
         
-        # Extract parameters from scene_json
-        prompt = scene_json.get("scene", {}).get("description", "")
-        seed = scene_json.get("scene", {}).get("seed", None)
+        # Convert parameters to enhanced prompt for better image generation
+        enhanced_prompt = params_to_enhanced_prompt(scene_json)
+        seed = scene_json.get("seed", None)
         
-        # Prepare rendering arguments
+        print(f"Original prompt: {scene_json.get('prompt', '')}")
+        print(f"Enhanced prompt: {enhanced_prompt}")
+        
+        # Prepare rendering arguments optimized for SDXL
         render_args = {
-            "prompt": prompt,
+            "prompt": enhanced_prompt,  # Use enhanced prompt with all parameters
             "seed": seed,
-            "num_inference_steps": 30,
-            "guidance_scale": 7.5,
+            "num_inference_steps": 50,  # SDXL works well with 50 steps
+            "guidance_scale": 9.0,  # Higher guidance for better quality
             "width": 1024,
             "height": 1024
         }
         
-        # Generate image with FIBO
+        # Generate image with SDXL
         out_path = client.generate(render_args)
         return out_path
         
     except Exception as e:
-        print(f"Warning: FIBO rendering failed: {e}")
+        print(f"Warning: SDXL rendering failed: {e}")
+        print("Falling back to mock rendering...")
+        
+        # Fallback to mock rendering
+        src = os.path.join(SAMPLES_DIR, "example_render.jpg")
+        if not os.path.exists(src):
+            raise FileNotFoundError("Sample render image not found.")
+        out_name = f"render_{uuid.uuid4().hex[:12]}.jpg"
+        out_path = os.path.join(OUTPUT_DIR, out_name)
+        shutil.copyfile(src, out_path)
+        return out_path
         print("Falling back to mock rendering...")
         
         # Fallback to mock rendering
@@ -172,30 +218,18 @@ def render_with_controlnet(scene_json):
 @app.post("/render")
 async def render(scene_json: dict):
     """
-    Accepts the validated FIBO JSON and returns an image URL.
-    Ensures 'scene.seed' exists; uses it for reproducibility
+    Accepts frontend RenderParameters format and returns an image URL.
+    Converts frontend format to SDXL-compatible parameters.
     Saves version metadata to sqlite.
     """
-    # Validate schema first
-    try:
-        validate(instance=scene_json, schema=FIBO_SCHEMA)
-    except ValidationError as e:
-        raise HTTPException(status_code=400, detail=f"JSON schema validation error: {e.message}")
+    # Validate required fields
+    if "prompt" not in scene_json:
+        raise HTTPException(status_code=400, detail="Missing 'prompt' field")
     
-    # Ensure seed
-    seed = None
-    try:
-        seed = scene_json["scene"].get("seed", None)
-    except Exception:
-        seed =None
+    # Extract seed (use existing or generate new)
+    seed = scene_json.get("seed", int(datetime.utcnow().timestamp()) % 1000000)
 
-    if seed is None:
-        # if no seed, assign deterministic seed
-        # For demo, use current timestamp truncated
-        seed = int(datetime.utcnow().timestamp()) % 1000000
-        scene_json.setdefault("scene", {})["seed"] = seed
-
-    # Call rendering function (stub)
+    # Call rendering function with frontend parameters
     try:
         out_path = render_with_fibo(scene_json)
     except Exception as e:
@@ -234,29 +268,26 @@ async def list_versions():
     return results
 
 @app.post("/upload_controlnet")
-async def upload_controlnet(file: UploadFile = File(...), kind: str = Form("sketch"), strength: float = Form(0.8)):
+async def upload_controlnet(file: UploadFile = File(...), image_type: str = Form("sketch")):
     """
-    Upload controlnet reference image (sketch/depth/seg). Returns mapped controlnet manifest:
-      {
-        "controlnet": {
-           "type": "sketch",
-           "image_ref": "/uploads/xxx.png",
-           "strength": 0.8
-         }
-      }
+    Upload controlnet reference image (sketch/depth/canny).
+    Returns path to uploaded image for frontend ControlNet panel.
+    Validates type matches frontend options: none, sketch, depth, canny.
     """
-    # save file
+    # Validate image type matches frontend options
+    valid_types = ["sketch", "depth", "canny"]
+    if image_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"image_type must be one of: {', '.join(valid_types)}")
+    
+    # Save file
     saved_rel = save_upload(file.file, file.filename)
-    # Build controlnet snippet for JSON
-    cn = {
-        "controlnet": {
-            "type": kind,
-            "image_ref": saved_rel,
-            "strength": float(strength),
-            "enabled": True
-        }
+    
+    # Return format matching frontend expectations
+    return {
+        "path": saved_rel,
+        "filename": file.filename,
+        "type": image_type
     }
-    return cn
 
 @app.post("/render_controlnet")
 async def render_controlnet(scene_json: dict):

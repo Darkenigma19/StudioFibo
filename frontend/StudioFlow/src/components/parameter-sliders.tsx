@@ -1,6 +1,6 @@
 "use client";
 
-import type { RenderParameters } from "@/page";
+import type { RenderParameters } from "@/app/page";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import {

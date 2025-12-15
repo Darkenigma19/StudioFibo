@@ -1,6 +1,6 @@
 "use client";
 
-import type { RenderParameters } from "@/page";
+import type { RenderParameters } from "@/app/page";
 import { PromptSection } from "@/components/prompt-section";
 import { ParameterSliders } from "@/components/parameter-sliders";
 import { ControlNetPanel } from "@/components/controlnet-panel";

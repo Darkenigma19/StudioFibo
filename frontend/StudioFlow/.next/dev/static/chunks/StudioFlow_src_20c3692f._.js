@@ -1009,41 +1009,42 @@ const controlNetTypes = [
         label: "Canny Edge"
     }
 ];
-const handleFileChange = async (e)=>{
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-        const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["uploadControlNet"])(file, controlNetTypes.type);
-        onControlNetChange({
-            ...controlNet,
-            image: result.path || result.filename
-        });
-        // Show preview
-        const reader = new FileReader();
-        reader.onload = (e)=>{
-            setPreviewUrl(e.target?.result);
-        };
-        reader.readAsDataURL(file);
-    } catch (error) {
-        console.error('Upload failed : ', error);
-        alert('Failed to upload image.Make sure is running');
-    }
-};
-function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onControlNetChange1 }) {
+function ControlNetPanel({ controlNet, onControlNetChange }) {
     _s();
     const [isDragging, setIsDragging] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [previewUrl, setPreviewUrl] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const handleFileChange = async (e)=>{
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const result = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["uploadControlNet"])(file, controlNet.type);
+            onControlNetChange({
+                ...controlNet,
+                image: result.path || result.filename
+            });
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e)=>{
+                setPreviewUrl(e.target?.result);
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error("Upload failed:", error);
+            alert("Failed to upload image. Make sure backend is running");
+        }
+    };
     const handleDrop = (e)=>{
         e.preventDefault();
         setIsDragging(false);
         // Simulate file upload
-        onControlNetChange1({
-            ...controlNet1,
+        onControlNetChange({
+            ...controlNet,
             image: "/uploaded-sketch-reference.jpg"
         });
     };
     const handleRemoveImage = ()=>{
-        onControlNetChange1({
-            ...controlNet1,
+        onControlNetChange({
+            ...controlNet,
             image: null
         });
     };
@@ -1055,7 +1056,7 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                 children: "ControlNet"
             }, void 0, false, {
                 fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                lineNumber: 72,
+                lineNumber: 84,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1069,13 +1070,13 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                                 children: "Control Type"
                             }, void 0, false, {
                                 fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                lineNumber: 77,
+                                lineNumber: 91,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
-                                value: controlNet1.type,
-                                onValueChange: (value)=>onControlNetChange1({
-                                        ...controlNet1,
+                                value: controlNet.type,
+                                onValueChange: (value)=>onControlNetChange({
+                                        ...controlNet,
                                         type: value
                                     }),
                                 children: [
@@ -1083,12 +1084,12 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                                         className: "bg-card border-border h-9 text-sm",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                             fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                            lineNumber: 85,
+                                            lineNumber: 99,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                        lineNumber: 84,
+                                        lineNumber: 98,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1097,27 +1098,27 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                                                 children: type.label
                                             }, type.value, false, {
                                                 fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                lineNumber: 89,
+                                                lineNumber: 103,
                                                 columnNumber: 17
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                        lineNumber: 87,
+                                        lineNumber: 101,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                lineNumber: 78,
+                                lineNumber: 92,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                        lineNumber: 76,
+                        lineNumber: 90,
                         columnNumber: 9
                     }, this),
-                    controlNet1.type !== "none" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                    controlNet.type !== "none" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "space-y-2",
@@ -1127,19 +1128,19 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                                         children: "Reference Image"
                                     }, void 0, false, {
                                         fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                        lineNumber: 101,
+                                        lineNumber: 115,
                                         columnNumber: 15
                                     }, this),
-                                    controlNet1.image ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    controlNet.image ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "relative group",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
-                                                src: controlNet1.image || "/placeholder.svg",
+                                                src: controlNet.image || "/placeholder.svg",
                                                 alt: "ControlNet reference",
                                                 className: "w-full h-24 object-cover rounded-md border border-border"
                                             }, void 0, false, {
                                                 fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                lineNumber: 104,
+                                                lineNumber: 118,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1151,18 +1152,18 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                                                     className: "w-3 h-3"
                                                 }, void 0, false, {
                                                     fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                    lineNumber: 115,
+                                                    lineNumber: 129,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                lineNumber: 109,
+                                                lineNumber: 123,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                        lineNumber: 103,
+                                        lineNumber: 117,
                                         columnNumber: 17
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         onDragOver: (e)=>{
@@ -1171,8 +1172,8 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                                         },
                                         onDragLeave: ()=>setIsDragging(false),
                                         onDrop: handleDrop,
-                                        onClick: ()=>onControlNetChange1({
-                                                ...controlNet1,
+                                        onClick: ()=>onControlNetChange({
+                                                ...controlNet,
                                                 image: "/sketch-reference-image.jpg"
                                             }),
                                         className: `
@@ -1189,18 +1190,18 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                                                         className: "w-5 h-5 text-accent"
                                                     }, void 0, false, {
                                                         fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                        lineNumber: 145,
+                                                        lineNumber: 159,
                                                         columnNumber: 25
                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$upload$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Upload$3e$__["Upload"], {
                                                         className: "w-5 h-5 text-muted-foreground"
                                                     }, void 0, false, {
                                                         fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                        lineNumber: 147,
+                                                        lineNumber: 161,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                    lineNumber: 143,
+                                                    lineNumber: 157,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1210,7 +1211,7 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                                                             children: "Drop image or click"
                                                         }, void 0, false, {
                                                             fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                            lineNumber: 151,
+                                                            lineNumber: 165,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1218,30 +1219,30 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                                                             children: "PNG, JPG up to 10MB"
                                                         }, void 0, false, {
                                                             fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                            lineNumber: 152,
+                                                            lineNumber: 166,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                    lineNumber: 150,
+                                                    lineNumber: 164,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                            lineNumber: 142,
+                                            lineNumber: 156,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                        lineNumber: 119,
+                                        lineNumber: 133,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                lineNumber: 100,
+                                lineNumber: 114,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1255,32 +1256,32 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                                                 children: "Strength"
                                             }, void 0, false, {
                                                 fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                lineNumber: 162,
+                                                lineNumber: 178,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "text-xs font-mono bg-muted px-2 py-0.5 rounded",
                                                 children: [
-                                                    (controlNet1.strength * 100).toFixed(0),
+                                                    (controlNet.strength * 100).toFixed(0),
                                                     "%"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                                lineNumber: 163,
+                                                lineNumber: 179,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                        lineNumber: 161,
+                                        lineNumber: 177,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$src$2f$components$2f$ui$2f$slider$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Slider"], {
                                         value: [
-                                            controlNet1.strength * 100
+                                            controlNet.strength * 100
                                         ],
-                                        onValueChange: ([value])=>onControlNetChange1({
-                                                ...controlNet1,
+                                        onValueChange: ([value])=>onControlNetChange({
+                                                ...controlNet,
                                                 strength: value / 100
                                             }),
                                         min: 0,
@@ -1289,13 +1290,13 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                                         className: "transition-smooth"
                                     }, void 0, false, {
                                         fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                        lineNumber: 167,
+                                        lineNumber: 183,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                                lineNumber: 160,
+                                lineNumber: 176,
                                 columnNumber: 13
                             }, this)
                         ]
@@ -1303,17 +1304,17 @@ function ControlNetPanel({ controlNet: controlNet1, onControlNetChange: onContro
                 ]
             }, void 0, true, {
                 fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-                lineNumber: 74,
+                lineNumber: 88,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/StudioFlow/src/components/controlnet-panel.tsx",
-        lineNumber: 71,
+        lineNumber: 83,
         columnNumber: 5
     }, this);
 }
-_s(ControlNetPanel, "VIDKbg2yfT0CLfTnlFHLO2Fjmb8=");
+_s(ControlNetPanel, "8LGePHpUDj0Hh1Z1+YLxKRjbuAY=");
 _c = ControlNetPanel;
 var _c;
 __turbopack_context__.k.register(_c, "ControlNetPanel");
@@ -3294,7 +3295,7 @@ function StudioFlow() {
     ]);
     const handleRender = (0, __TURBOPACK__imported__module__$5b$project$5d2f$StudioFlow$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
         "StudioFlow.useCallback[handleRender]": async ()=>{
-            console.log("🎨 Starting render process...");
+            console.log("Starting render process...");
             console.log("Prompt:", params.prompt);
             setIsRendering(true);
             try {
@@ -3325,7 +3326,7 @@ function StudioFlow() {
                 }["StudioFlow.useCallback[handleRender]"]);
                 console.log("✓ Render complete! Image should appear in preview.");
             } catch (error) {
-                console.error("❌ Rendering failed:", error);
+                console.error("Rendering failed:", error);
                 alert(`Failed to render image: ${error instanceof Error ? error.message : "Unknown error"}`);
             } finally{
                 setIsRendering(false);

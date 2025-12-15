@@ -1,24 +1,30 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Upload, X, ImageIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
+import { Upload, X, ImageIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { uploadControlNet } from "@/lib/api";
 
 interface ControlNetConfig {
-  type: "sketch" | "depth" | "canny" | "none"
-  strength: number
-  image: string | null
+  type: "sketch" | "depth" | "canny" | "none";
+  strength: number;
+  image: string | null;
 }
 
 interface ControlNetPanelProps {
-  controlNet: ControlNetConfig
-  onControlNetChange: (value: ControlNetConfig) => void
+  controlNet: ControlNetConfig;
+  onControlNetChange: (value: ControlNetConfig) => void;
 }
 
 const controlNetTypes = [
@@ -26,50 +32,58 @@ const controlNetTypes = [
   { value: "sketch", label: "Sketch" },
   { value: "depth", label: "Depth Map" },
   { value: "canny", label: "Canny Edge" },
-]
-const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) =>{
-  const file = e.target.files?.[0];
-  if(!file) return;
+];
 
-  try{
-    const result = await uploadControlNet(file , controlNetTypes.type);
+export function ControlNetPanel({
+  controlNet,
+  onControlNetChange,
+}: ControlNetPanelProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-    onControlNetChange({
-      ...controlNet,
-      image: result.path || result.filename,
-    });
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    // Show preview
-    const reader = new FileReader();
-    reader.onload = (e) =>{
-      setPreviewUrl(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-  } catch(error){
-    console.error('Upload failed : ',error);
-    alert('Failed to upload image.Make sure is running')
-  }
-};
-export function ControlNetPanel({ controlNet, onControlNetChange }: ControlNetPanelProps) {
-  const [isDragging, setIsDragging] = useState(false)
+    try {
+      const result = await uploadControlNet(file, controlNet.type);
+
+      onControlNetChange({
+        ...controlNet,
+        image: result.path || result.filename,
+      });
+
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewUrl(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Failed to upload image. Make sure backend is running");
+    }
+  };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
+    e.preventDefault();
+    setIsDragging(false);
     // Simulate file upload
     onControlNetChange({
       ...controlNet,
       image: "/uploaded-sketch-reference.jpg",
-    })
-  }
+    });
+  };
 
   const handleRemoveImage = () => {
-    onControlNetChange({ ...controlNet, image: null })
-  }
+    onControlNetChange({ ...controlNet, image: null });
+  };
 
   return (
     <section className="space-y-4">
-      <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">ControlNet</Label>
+      <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        ControlNet
+      </Label>
 
       <div className="space-y-4 bg-secondary/30 rounded-lg p-4 border border-border">
         {/* Type Selector */}
@@ -118,8 +132,8 @@ export function ControlNetPanel({ controlNet, onControlNetChange }: ControlNetPa
               ) : (
                 <div
                   onDragOver={(e) => {
-                    e.preventDefault()
-                    setIsDragging(true)
+                    e.preventDefault();
+                    setIsDragging(true);
                   }}
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleDrop}
@@ -149,7 +163,9 @@ export function ControlNetPanel({ controlNet, onControlNetChange }: ControlNetPa
                     </div>
                     <div>
                       <p className="text-sm font-medium">Drop image or click</p>
-                      <p className="text-xs text-muted-foreground">PNG, JPG up to 10MB</p>
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG up to 10MB
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -166,7 +182,9 @@ export function ControlNetPanel({ controlNet, onControlNetChange }: ControlNetPa
               </div>
               <Slider
                 value={[controlNet.strength * 100]}
-                onValueChange={([value]) => onControlNetChange({ ...controlNet, strength: value / 100 })}
+                onValueChange={([value]) =>
+                  onControlNetChange({ ...controlNet, strength: value / 100 })
+                }
                 min={0}
                 max={100}
                 step={1}
@@ -177,5 +195,5 @@ export function ControlNetPanel({ controlNet, onControlNetChange }: ControlNetPa
         )}
       </div>
     </section>
-  )
+  );
 }

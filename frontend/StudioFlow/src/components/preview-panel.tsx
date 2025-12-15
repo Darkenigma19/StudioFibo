@@ -1,6 +1,6 @@
 "use client";
 
-import type { RenderParameters, Version } from "@/page";
+import type { RenderParameters, Version } from "@/app/page";
 import { RenderPreview } from "@/components/render-preview";
 import { ExportTools } from "@/components/export-tools";
 import { VersionHistoryBar } from "@/components/version-history-bar";
